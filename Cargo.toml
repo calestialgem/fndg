@@ -1,0 +1,16 @@
+[package]
+name = "fndg"
+version = "0.1.0"
+authors = ["Cem Geçgel <gecgelcem@outlook.com>"]
+edition = "2021"
+description = "An unchained map game where you battle for resources while building your nation up."
+readme = "README.md"
+repository = "https://github.com/Waistax/fndg"
+license = "MIT OR Apache-2.0"
+keywords = ["gamedev"]
+categories = ["games"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = "0.6.0"
