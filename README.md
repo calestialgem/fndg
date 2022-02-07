@@ -3,11 +3,20 @@
 An **unchained** map game where you battle for resources while _building_ your
 _nation_ up.
 
-## Unchained
+## Features
 
 Here "unchained" means that there will be no arbitrary limits on the quantity of
 stuff like units and cities. This is the game's main aim, which spills to
 _modding support_ as well. Although, the scope is very small for now.
+
+The prototype will have the minimum amount of features: _map generation_ from
+perlin noise, building and capturing _cities_, recruiting _armies_, and a simple
+_enemy AI_ to play againts.
+
+If all these can be implemented, more economy focused features will be done:
+_roads_, _buildings_, _city improvements_, _sailing_. A third set of features,
+which are about incresing the depth of the game, can be done as time allows.
+These will be _technology_, _diplomacy_, and _multiplayer_.
 
 ## Game Engine
 
