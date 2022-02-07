@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+mod map;
+
 /// Main Bevy plugin of the game, Founding.
 pub struct Fndg;
 

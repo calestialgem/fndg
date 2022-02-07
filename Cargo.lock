@@ -1278,6 +1278,10 @@ name = "fndg"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "hex_grid",
+ "perlin2d",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1540,6 +1544,12 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
+name = "hex_grid"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cb20185b971a4eb16f7ae53268b44bc435b05d10770c8a4bda64b4033afda45"
 
 [[package]]
 name = "hexasphere"
@@ -2249,6 +2259,12 @@ name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
+
+[[package]]
+name = "perlin2d"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb6c71cfd92099c43062f059494786cdcbd9cb4dab61389098362b241071cde0"
 
 [[package]]
 name = "petgraph"
