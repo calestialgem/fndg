@@ -1,29 +1,27 @@
-use perlin2d::PerlinNoise2D;
+use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use serde::{Deserialize, Serialize};
 use std::fs;
 
-/// Perlin noise configuration.
+/// Noise configuration.
 #[derive(Serialize, Deserialize)]
-pub(super) struct Noise {
+pub(super) struct NoiseConfig {
     octaves: i32,
-    frequency: f64,
-    persistence: f64,
-    lacunarity: f64,
-    scale: f64,
+    gain: f32,
+    lacunarity: f32,
+    frequency: f32,
+    scale: f32,
 }
 
-impl Noise {
-    pub(super) fn perlin(&self, amplitude: f64) -> PerlinNoise2D {
-        PerlinNoise2D::new(
-            self.octaves,
-            amplitude,
-            self.frequency,
-            self.persistence,
-            self.lacunarity,
-            (self.scale, self.scale),
-            0.0,
-            rand::random(),
-        )
+impl NoiseConfig {
+    pub(super) fn noise(&self) -> (FastNoise, f32) {
+        let mut noise = FastNoise::seeded(rand::random());
+        noise.set_noise_type(NoiseType::SimplexFractal);
+        noise.set_fractal_type(FractalType::FBM);
+        noise.set_fractal_octaves(self.octaves);
+        noise.set_fractal_gain(self.gain);
+        noise.set_fractal_lacunarity(self.lacunarity);
+        noise.set_frequency(self.frequency);
+        (noise, self.scale)
     }
 }
 
@@ -31,13 +29,13 @@ impl Noise {
 #[derive(Serialize, Deserialize)]
 pub(super) struct TerrainWeightConfig {
     pub(super) name: String,
-    pub(super) weight: f64,
+    pub(super) weight: f32,
 }
 
-/// Perlin noise to [Terrain] distributor configuration.
+/// Noise to [Terrain] distributor configuration.
 #[derive(Serialize, Deserialize)]
 pub(super) struct DistributorConfig {
-    pub(super) noise: Noise,
+    pub(super) noise: NoiseConfig,
     pub(super) distribution: Vec<TerrainWeightConfig>,
 }
 

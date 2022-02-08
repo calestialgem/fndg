@@ -3,9 +3,9 @@
 	"height": {
 		"noise": {
 			"octaves": 2,
-			"frequency": 1.0,
-			"persistence": 1.0,
+			"gain": 1.0,
 			"lacunarity": 1.0,
+			"frequency": 1.0,
 			"scale": 1.0
 		},
 		"distribution": [
@@ -21,9 +21,9 @@
 	"humidity": {
 		"noise": {
 			"octaves": 4,
-			"frequency": 1.0,
-			"persistence": 1.0,
+			"gain": 1.0,
 			"lacunarity": 1.0,
+			"frequency": 1.0,
 			"scale": 1.0
 		},
 		"distribution": [

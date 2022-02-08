@@ -4,58 +4,71 @@ pub(crate) use self::config::GenerationConfig;
 
 use self::config::{DistributorConfig, TerrainWeightConfig};
 use super::Terrains;
+use bracket_noise::prelude::FastNoise;
 use hex2d::Coordinate;
-use perlin2d::PerlinNoise2D;
 use std::collections::HashMap;
 
 /// [Terrain] and weight pair to distribute.
 struct TerrainWeight {
     terrain: usize,
-    weight: f64,
+    weight: f32,
 }
 
 impl TerrainWeight {
     const BY_HUMIDITY: usize = usize::MAX;
 
-    fn new(terrains: &Terrains, config: &TerrainWeightConfig) -> Self {
+    fn new(terrains: &Terrains, config: &TerrainWeightConfig, total_weight: f32) -> Self {
+        let weight = config.weight / total_weight;
         if config.name == "BY_HUMIDITY" {
             TerrainWeight {
                 terrain: Self::BY_HUMIDITY,
-                weight: config.weight,
+                weight,
             }
         } else {
             TerrainWeight {
                 terrain: terrains.of_name(&config.name).id(),
-                weight: config.weight,
+                weight,
             }
         }
     }
 }
 
 struct Distributor {
-    noise: PerlinNoise2D,
+    noise: FastNoise,
+    scale: f32,
     distribution: Vec<TerrainWeight>,
 }
 
 impl Distributor {
     fn new(terrains: &Terrains, config: &DistributorConfig) -> Self {
-        let mut weights = Vec::new();
-        let mut amplitude = 0.0;
-        for weight in config.distribution.iter() {
-            weights.push(TerrainWeight::new(terrains, weight));
-            amplitude += weight.weight;
-        }
+        let total_weight = {
+            let mut total_weight = 0.0;
+            for TerrainWeightConfig { name: _, weight } in config.distribution.iter() {
+                total_weight += weight;
+            }
+            total_weight
+        };
+        let distribution = {
+            let mut distribution = Vec::new();
+            for weight in config.distribution.iter() {
+                distribution.push(TerrainWeight::new(terrains, weight, total_weight));
+            }
+            distribution
+        };
+        let noise = config.noise.noise();
         Distributor {
-            noise: config.noise.perlin(amplitude),
-            distribution: weights,
+            noise: noise.0,
+            scale: noise.1,
+            distribution,
         }
     }
 
-    fn noise(&self, coord: Coordinate) -> f64 {
-        self.noise.get_noise(coord.x as f64, coord.y as f64)
+    fn noise(&self, coord: Coordinate) -> f32 {
+        self.noise
+            .get_noise(coord.x as f32 / self.scale, coord.y as f32 / self.scale)
     }
 
-    fn distribute(&self, value: f64) -> usize {
+    fn distribute(&self, value: f32) -> usize {
         let mut remaining = value;
         for TerrainWeight { terrain, weight } in self.distribution.iter() {
             remaining -= weight;
@@ -64,7 +77,7 @@ impl Distributor {
             }
         }
         remaining = value;
-        for TerrainWeight { terrain, weight } in self.distribution.iter() {
+        for TerrainWeight { terrain: _, weight } in self.distribution.iter() {
             println!("Remaining: {}", remaining);
             remaining -= weight;
         }
