@@ -5,6 +5,7 @@ use std::fs;
 /// Noise configuration.
 #[derive(Serialize, Deserialize)]
 pub(super) struct NoiseConfig {
+    simplex: bool,
     octaves: i32,
     gain: f32,
     lacunarity: f32,
@@ -15,7 +16,11 @@ pub(super) struct NoiseConfig {
 impl NoiseConfig {
     pub(super) fn noise(&self) -> (FastNoise, f32) {
         let mut noise = FastNoise::seeded(rand::random());
-        noise.set_noise_type(NoiseType::SimplexFractal);
+        noise.set_noise_type(if self.simplex {
+            NoiseType::SimplexFractal
+        } else {
+            NoiseType::PerlinFractal
+        });
         noise.set_fractal_type(FractalType::FBM);
         noise.set_fractal_octaves(self.octaves);
         noise.set_fractal_gain(self.gain);

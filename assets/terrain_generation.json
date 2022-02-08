@@ -2,6 +2,7 @@
 	"radius": 16,
 	"height": {
 		"noise": {
+			"simplex": true,
 			"octaves": 2,
 			"gain": 1.0,
 			"lacunarity": 1.0,
@@ -20,6 +21,7 @@
 	},
 	"humidity": {
 		"noise": {
+			"simplex": true,
 			"octaves": 4,
 			"gain": 1.0,
 			"lacunarity": 1.0,
