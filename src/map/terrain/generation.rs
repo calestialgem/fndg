@@ -64,14 +64,38 @@ impl Distribute {
     }
 }
 
+struct Island {
+    radius: f32,
+    start: f32,
+    power: f32,
+}
+
+impl Island {
+    fn island(&self, coord: Coordinate) -> f32 {
+        let distance = coord.distance(Coordinate::new(0, 0)) as f32 / self.radius;
+        if distance < self.start {
+            return 1.0;
+        }
+        (1.0 - (distance - self.start) / (1.0 - self.start)).powf(self.power)
+    }
+}
+
 struct Select {
     noise: Noise,
+    island: Option<Island>,
     distribute: Distribute,
 }
 
 impl Select {
     fn select(&self, coord: Coordinate) -> usize {
-        self.distribute.distribute(self.noise.noise(coord))
+        self.distribute.distribute({
+            let noise = self.noise.noise(coord);
+            if let Some(island) = &self.island {
+                noise * island.island(coord)
+            } else {
+                noise
+            }
+        })
     }
 }
 
@@ -124,8 +148,8 @@ impl Config {
     pub(crate) fn create(&self, terrains: &Terrains) -> Generate {
         Generate {
             radius: self.radius,
-            height: self.height.create(terrains),
-            humidity: self.humidity.create(terrains),
+            height: self.height.create(terrains, self.radius),
+            humidity: self.humidity.create(terrains, self.radius),
         }
     }
 }

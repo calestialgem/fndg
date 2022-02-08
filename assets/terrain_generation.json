@@ -9,6 +9,10 @@
 			"frequency": 2.0,
 			"scale": 100.0
 		},
+		"island": {
+			"start": 0.75,
+			"power": 0.5
+		},
 		"distribute": [
 			{ "name": "Glaciers", "weight": 3.0 },
 			{ "name": "Oceans", "weight": 2.0 },

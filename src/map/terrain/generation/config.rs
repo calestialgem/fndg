@@ -1,4 +1,4 @@
-use super::{Distribute, Noise, Select, Weight};
+use super::{Distribute, Island, Noise, Select, Weight};
 use crate::map::terrain::Terrains;
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use serde::{Deserialize, Serialize};
@@ -68,17 +68,39 @@ impl DistributeConfig {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub(super) struct IslandConfig {
+    start: f32,
+    power: f32,
+}
+
+impl IslandConfig {
+    fn create(&self, radius: i32) -> Island {
+        Island {
+            radius: radius as f32,
+            start: self.start,
+            power: self.power,
+        }
+    }
+}
+
 /// Noise to [Terrain] distributor configuration.
 #[derive(Serialize, Deserialize)]
 pub(super) struct SelectConfig {
     pub(super) noise: NoiseConfig,
+    pub(super) island: Option<IslandConfig>,
     pub(super) distribute: DistributeConfig,
 }
 
 impl SelectConfig {
-    pub(super) fn create(&self, terrains: &Terrains) -> Select {
+    pub(super) fn create(&self, terrains: &Terrains, radius: i32) -> Select {
         Select {
             noise: self.noise.create(),
+            island: if let Some(island) = &self.island {
+                Some(island.create(radius))
+            } else {
+                None
+            },
             distribute: self.distribute.create(terrains),
         }
     }
