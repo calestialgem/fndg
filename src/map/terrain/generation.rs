@@ -17,16 +17,15 @@ struct TerrainWeight {
 impl TerrainWeight {
     const BY_HUMIDITY: usize = usize::MAX;
 
-    fn new(terrains: &Terrains, config: &TerrainWeightConfig, total_weight: f32) -> Self {
-        let weight = config.weight / total_weight;
-        if config.name == "BY_HUMIDITY" {
+    fn new(terrains: &Terrains, name: &String, weight: f32) -> Self {
+        if name == "BY_HUMIDITY" {
             TerrainWeight {
                 terrain: Self::BY_HUMIDITY,
                 weight,
             }
         } else {
             TerrainWeight {
-                terrain: terrains.of_name(&config.name).id(),
+                terrain: terrains.of_name(name).id(),
                 weight,
             }
         }
@@ -51,7 +50,7 @@ impl Distributor {
         let distribution = {
             let mut distribution = Vec::new();
             for weight in config.distribution.0.iter() {
-                distribution.push(TerrainWeight::new(terrains, weight, total_weight));
+                distribution.push(weight.create(terrains, total_weight));
             }
             distribution
         };
