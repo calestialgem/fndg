@@ -22,7 +22,7 @@ struct Location {
 }
 
 impl Location {
-    const SIZE: f32 = 24.0;
+    const SIZE: f32 = 4.0;
     const SPACING: Spacing = Spacing::PointyTop(Self::SIZE / 2.0);
 
     fn to_vec3(coord: Coordinate) -> Vec3 {

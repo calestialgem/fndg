@@ -15,8 +15,11 @@ struct Noise {
 
 impl Noise {
     fn noise(&self, coord: Coordinate) -> f32 {
-        self.noise
-            .get_noise(coord.x as f32 / self.scale, coord.y as f32 / self.scale)
+        ((self
+            .noise
+            .get_noise(coord.x as f32 / self.scale, coord.y as f32 / self.scale))
+            + 1.0)
+            / 2.0
     }
 }
 

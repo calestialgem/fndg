@@ -1,38 +1,38 @@
 {
-	"radius": 16,
+	"radius": 100,
 	"height": {
 		"noise": {
 			"simplex": true,
 			"octaves": 2,
 			"gain": 1.0,
 			"lacunarity": 1.0,
-			"frequency": 1.0,
-			"scale": 1.0
+			"frequency": 2.0,
+			"scale": 100.0
 		},
 		"distribute": [
-			{ "name": "Glaciers", "weight": 1.0 },
-			{ "name": "Oceans", "weight": 1.0 },
+			{ "name": "Glaciers", "weight": 3.0 },
+			{ "name": "Oceans", "weight": 2.0 },
 			{ "name": "Seas", "weight": 2.0 },
 			{ "name": "Shores", "weight": 1.0 },
 			{ "name": "Beaches", "weight": 0.5 },
 			{ "name": "BY_HUMIDITY", "weight": 5.0 },
-			{ "name": "Mountains", "weight": 2.0 }
+			{ "name": "Mountains", "weight": 6.0 }
 		]
 	},
 	"humidity": {
 		"noise": {
 			"simplex": true,
-			"octaves": 4,
-			"gain": 1.0,
-			"lacunarity": 1.0,
-			"frequency": 1.0,
-			"scale": 1.0
+			"octaves": 1,
+			"gain": 0.5,
+			"lacunarity": 4.0,
+			"frequency": 2.0,
+			"scale": 20.0
 		},
 		"distribute": [
-			{ "name": "Deserts", "weight": 1.0 },
-			{ "name": "Grasslands", "weight": 3.0 },
-			{ "name": "Forests", "weight": 1.0 },
-			{ "name": "Shores", "weight": 0.5 }
+			{ "name": "Deserts", "weight": 2.5 },
+			{ "name": "Grasslands", "weight": 1.5 },
+			{ "name": "Forests", "weight": 2.0 },
+			{ "name": "Shores", "weight": 2.0 }
 		]
 	}
 }
