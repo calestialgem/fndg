@@ -50,7 +50,7 @@ impl Terrains {
     ///
     /// * Cannot read the file "assets/terrains.json".
     /// * Cannot parse the JSON.
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let data: Vec<TerrainData> =
             serde_json::from_str(&fs::read_to_string("assets/terrains.json").unwrap()).unwrap();
         let mut indexed = Vec::new();

@@ -44,13 +44,14 @@ pub(super) struct DistributorConfig {
 /// Configuration of [Terrain] generation.
 #[derive(Serialize, Deserialize)]
 pub(crate) struct GenerationConfig {
-    pub(super) radius: u16,
+    pub(super) radius: i32,
     pub(super) height: DistributorConfig,
     pub(super) humidity: DistributorConfig,
 }
 
 impl GenerationConfig {
     pub(crate) fn new() -> Self {
-        serde_json::from_str(&fs::read_to_string("assets/map_generation.json").unwrap()).unwrap()
+        serde_json::from_str(&fs::read_to_string("assets/terrain_generation.json").unwrap())
+            .unwrap()
     }
 }

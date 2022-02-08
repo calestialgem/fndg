@@ -4,7 +4,7 @@ pub(crate) use self::config::GenerationConfig;
 
 use self::config::{DistributorConfig, TerrainWeightConfig};
 use super::Terrains;
-use hex_grid::{Coordinate, Offset, CENTER};
+use hex2d::Coordinate;
 use perlin2d::PerlinNoise2D;
 use std::collections::HashMap;
 
@@ -55,20 +55,26 @@ impl Distributor {
         self.noise.get_noise(coord.x as f64, coord.y as f64)
     }
 
-    fn distribute(&self, mut value: f64) -> usize {
+    fn distribute(&self, value: f64) -> usize {
+        let mut remaining = value;
         for TerrainWeight { terrain, weight } in self.distribution.iter() {
-            value -= weight;
-            if value <= 0.0 {
+            remaining -= weight;
+            if remaining <= 0.0 {
                 return *terrain;
             }
         }
-        unreachable!("`value` is too big!");
+        remaining = value;
+        for TerrainWeight { terrain, weight } in self.distribution.iter() {
+            println!("Remaining: {}", remaining);
+            remaining -= weight;
+        }
+        unreachable!("`value` {} is too big! Remaining: {}", value, remaining);
     }
 }
 
 /// Generates; a [Map] from Perlin noise.
 pub(crate) struct Generator {
-    radius: u16,
+    radius: i32,
     height: Distributor,
     humidity: Distributor,
 }
@@ -83,7 +89,7 @@ impl Generator {
     }
 
     pub(crate) fn generate(&self) -> HashMap<Coordinate, usize> {
-        let coords = CENTER + Offset::fill_hex(self.radius);
+        let coords = Coordinate::new(0, 0).range_iter(self.radius);
         let mut map = HashMap::new();
         for coord in coords {
             map.insert(coord, self.generate_tile(coord));

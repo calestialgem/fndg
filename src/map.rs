@@ -8,16 +8,28 @@ use self::terrain::{
 };
 use bevy::{
     math::Vec3,
-    prelude::{Bundle, Commands, Component, Entity, Res, ResMut, Transform},
+    prelude::{
+        App, Bundle, Commands, Component, Entity, OrthographicCameraBundle, Plugin, Res, ResMut,
+        Transform,
+    },
     sprite::SpriteBundle,
 };
-use hex_grid::{Coordinate, HexSize, PixelOrientation};
+use hex2d::{Coordinate, Spacing};
 use std::collections::HashMap;
 
 /// Location in the [Map].
 #[derive(Component)]
 struct Location {
     coord: Coordinate,
+}
+
+impl Location {
+    const SPACING: Spacing = Spacing::PointyTop(1.0);
+
+    fn to_vec3(coord: Coordinate) -> Vec3 {
+        let pixel = coord.to_pixel(Self::SPACING);
+        Vec3::new(pixel.0, pixel.1, 0.0)
+    }
 }
 
 /// Smallest piece of a [Map].
@@ -27,12 +39,6 @@ struct Tile {
 }
 
 impl Tile {
-    const SIZE: HexSize = HexSize::from_regular_height(1.0);
-    const PIXEL_ORIENTATION: PixelOrientation = PixelOrientation {
-        right_increasing: true,
-        up_increasing: true,
-    };
-
     /// Returns this tile's terrain from the given terrains. This must be the
     /// same terrains that was used in the generation of the tile.
     fn terrain<'a>(&self, terrains: &'a Terrains) -> &'a Terrain {
@@ -50,10 +56,6 @@ struct TileBundle {
 
 impl TileBundle {
     fn new(coord: Coordinate, terrain: usize, terrains: &Terrains) -> Self {
-        fn to_screen_coord(coord: Coordinate) -> Vec3 {
-            let pixel = coord.to_pixel(Tile::SIZE, Tile::PIXEL_ORIENTATION);
-            Vec3::new(pixel.0, pixel.1, 0.0)
-        }
         TileBundle {
             sprite: SpriteBundle {
                 sprite: bevy::sprite::Sprite {
@@ -61,7 +63,7 @@ impl TileBundle {
                     ..Default::default()
                 },
                 transform: Transform {
-                    translation: to_screen_coord(coord),
+                    translation: Location::to_vec3(coord),
                     scale: Vec3::new(1.0, 1.0, 1.0),
                     ..Default::default()
                 },
@@ -77,6 +79,25 @@ impl TileBundle {
 #[derive(Default)]
 struct Map {
     tiles: HashMap<Coordinate, Entity>,
+}
+
+pub(super) struct MapPlugin;
+
+impl Plugin for MapPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(Terrains::new());
+        app.insert_resource(Map::default());
+        app.add_startup_system(create_camera);
+        app.add_startup_system(generate_map);
+    }
+
+    fn name(&self) -> &str {
+        "Fndg::Map"
+    }
+}
+
+fn create_camera(mut commands: Commands) {
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 }
 
 fn generate_map(mut map: ResMut<Map>, terrains: Res<Terrains>, mut commands: Commands) {
