@@ -1,12 +1,12 @@
 mod config;
 
-pub(crate) use self::config::GenerationConfig;
-
 use self::config::{DistributorConfig, TerrainWeightConfig};
 use super::Terrains;
 use bracket_noise::prelude::FastNoise;
 use hex2d::Coordinate;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
 
 /// [Terrain] and weight pair to distribute.
 struct TerrainWeight {
@@ -43,22 +43,21 @@ impl Distributor {
     fn new(terrains: &Terrains, config: &DistributorConfig) -> Self {
         let total_weight = {
             let mut total_weight = 0.0;
-            for TerrainWeightConfig { name: _, weight } in config.distribution.iter() {
+            for TerrainWeightConfig { name: _, weight } in config.distribution.0.iter() {
                 total_weight += weight;
             }
             total_weight
         };
         let distribution = {
             let mut distribution = Vec::new();
-            for weight in config.distribution.iter() {
+            for weight in config.distribution.0.iter() {
                 distribution.push(TerrainWeight::new(terrains, weight, total_weight));
             }
             distribution
         };
-        let noise = config.noise.noise();
         Distributor {
-            noise: noise.0,
-            scale: noise.1,
+            noise: config.noise.noise(),
+            scale: config.noise.scale,
             distribution,
         }
     }
@@ -93,7 +92,7 @@ pub(crate) struct Generator {
 }
 
 impl Generator {
-    pub(crate) fn new(terrains: &Terrains, config: &GenerationConfig) -> Self {
+    pub(crate) fn new(terrains: &Terrains, config: &Config) -> Self {
         Generator {
             radius: config.radius,
             height: Distributor::new(terrains, &config.height),
@@ -117,5 +116,31 @@ impl Generator {
         } else {
             from_height
         }
+    }
+}
+
+/// Configuration of [Terrain] generation.
+#[derive(Serialize, Deserialize)]
+pub(crate) struct Config {
+    radius: i32,
+    height: DistributorConfig,
+    humidity: DistributorConfig,
+}
+
+impl Config {
+    const FILE: &'static str = "assets/terrain_generation.json";
+
+    fn from_file(file: &str) -> Self {
+        Self::from_json(&fs::read_to_string(file).unwrap())
+    }
+
+    fn from_json(json: &str) -> Self {
+        serde_json::from_str(json).unwrap()
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self::from_file(Self::FILE)
     }
 }

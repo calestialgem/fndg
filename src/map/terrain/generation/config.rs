@@ -1,20 +1,19 @@
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use serde::{Deserialize, Serialize};
-use std::fs;
 
 /// Noise configuration.
 #[derive(Serialize, Deserialize)]
-pub(super) struct NoiseConfig {
-    simplex: bool,
-    octaves: i32,
-    gain: f32,
-    lacunarity: f32,
-    frequency: f32,
-    scale: f32,
+pub struct NoiseConfig {
+    pub simplex: bool,
+    pub octaves: i32,
+    pub gain: f32,
+    pub lacunarity: f32,
+    pub frequency: f32,
+    pub scale: f32,
 }
 
 impl NoiseConfig {
-    pub(super) fn noise(&self) -> (FastNoise, f32) {
+    pub fn noise(&self) -> FastNoise {
         let mut noise = FastNoise::seeded(rand::random());
         noise.set_noise_type(if self.simplex {
             NoiseType::SimplexFractal
@@ -26,35 +25,23 @@ impl NoiseConfig {
         noise.set_fractal_gain(self.gain);
         noise.set_fractal_lacunarity(self.lacunarity);
         noise.set_frequency(self.frequency);
-        (noise, self.scale)
+        noise
     }
 }
 
 /// [Terrain] name and weight pair to distribute.
 #[derive(Serialize, Deserialize)]
-pub(super) struct TerrainWeightConfig {
-    pub(super) name: String,
-    pub(super) weight: f32,
+pub struct TerrainWeightConfig {
+    pub name: String,
+    pub weight: f32,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct Distribution(pub Vec<TerrainWeightConfig>);
 
 /// Noise to [Terrain] distributor configuration.
 #[derive(Serialize, Deserialize)]
-pub(super) struct DistributorConfig {
-    pub(super) noise: NoiseConfig,
-    pub(super) distribution: Vec<TerrainWeightConfig>,
-}
-
-/// Configuration of [Terrain] generation.
-#[derive(Serialize, Deserialize)]
-pub(crate) struct GenerationConfig {
-    pub(super) radius: i32,
-    pub(super) height: DistributorConfig,
-    pub(super) humidity: DistributorConfig,
-}
-
-impl GenerationConfig {
-    pub(crate) fn new() -> Self {
-        serde_json::from_str(&fs::read_to_string("assets/terrain_generation.json").unwrap())
-            .unwrap()
-    }
+pub struct DistributorConfig {
+    pub noise: NoiseConfig,
+    pub distribution: Distribution,
 }

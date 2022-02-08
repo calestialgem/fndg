@@ -3,7 +3,7 @@
 mod terrain;
 
 use self::terrain::{
-    generation::{GenerationConfig, Generator},
+    generation::{Config, Generator},
     Terrain, Terrains,
 };
 use bevy::{
@@ -93,7 +93,7 @@ pub(super) struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<MapGenEvent>();
-        app.insert_resource(Terrains::new());
+        app.insert_resource(Terrains::default());
         app.insert_resource(Map::default());
         app.insert_resource(ClearColor(Color::rgb(0.94, 0.97, 1.0)));
         app.add_startup_system(create_camera);
@@ -139,7 +139,7 @@ fn generate_map(
             commands.entity(*tile).despawn();
         }
         map.tiles.clear();
-        let terrain_map = Generator::new(&terrains, &GenerationConfig::new()).generate();
+        let terrain_map = Generator::new(&terrains, &Config::default()).generate();
         for (coord, terrain) in terrain_map.into_iter() {
             let tile = commands
                 .spawn_bundle(TileBundle::new(coord, terrain, &terrains, &texture))
