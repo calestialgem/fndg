@@ -9,8 +9,8 @@ use self::terrain::{
 use bevy::{
     math::Vec3,
     prelude::{
-        App, Bundle, Commands, Component, Entity, OrthographicCameraBundle, Plugin, Res, ResMut,
-        Transform,
+        App, AssetServer, Bundle, Commands, Component, Entity, EventReader, EventWriter, Handle,
+        Image, OrthographicCameraBundle, Plugin, Res, ResMut, Transform,
     },
     sprite::SpriteBundle,
 };
@@ -24,7 +24,7 @@ struct Location {
 }
 
 impl Location {
-    const SIZE: f32 = 10.0;
+    const SIZE: f32 = 24.0;
     const SPACING: Spacing = Spacing::PointyTop(Self::SIZE / 2.0);
 
     fn to_vec3(coord: Coordinate) -> Vec3 {
@@ -56,7 +56,7 @@ struct TileBundle {
 }
 
 impl TileBundle {
-    fn new(coord: Coordinate, terrain: usize, terrains: &Terrains) -> Self {
+    fn new(coord: Coordinate, terrain: usize, terrains: &Terrains, texture: &TileTexture) -> Self {
         TileBundle {
             sprite: SpriteBundle {
                 sprite: bevy::sprite::Sprite {
@@ -65,9 +65,14 @@ impl TileBundle {
                 },
                 transform: Transform {
                     translation: Location::to_vec3(coord),
-                    scale: Vec3::new(Location::SIZE, Location::SIZE, 1.0),
+                    scale: Vec3::new(
+                        Location::SIZE / TileTexture::SIZE,
+                        Location::SIZE / TileTexture::SIZE,
+                        1.0,
+                    ),
                     ..Default::default()
                 },
+                texture: texture.0.clone(),
                 ..Default::default()
             },
             location: Location { coord },
@@ -86,10 +91,13 @@ pub(super) struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
+        app.add_event::<MapGenEvent>();
         app.insert_resource(Terrains::new());
         app.insert_resource(Map::default());
         app.add_startup_system(create_camera);
-        app.add_startup_system(generate_map);
+        app.add_startup_system(load_tile_texture);
+        app.add_startup_system(generate_initial_map);
+        app.add_system(generate_map);
     }
 
     fn name(&self) -> &str {
@@ -101,12 +109,40 @@ fn create_camera(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 }
 
-fn generate_map(mut map: ResMut<Map>, terrains: Res<Terrains>, mut commands: Commands) {
-    let terrain_map = Generator::new(&terrains, &GenerationConfig::new()).generate();
-    for (coord, terrain) in terrain_map.into_iter() {
-        let tile = commands
-            .spawn_bundle(TileBundle::new(coord, terrain, &terrains))
-            .id();
-        map.tiles.insert(coord, tile);
+struct TileTexture(Handle<Image>);
+
+impl TileTexture {
+    const SIZE: f32 = 256.0;
+}
+
+fn load_tile_texture(mut commands: Commands, server: Res<AssetServer>) {
+    commands.insert_resource(TileTexture(server.load("tile.png")));
+}
+
+fn generate_initial_map(mut gen_event: EventWriter<MapGenEvent>) {
+    gen_event.send(MapGenEvent);
+}
+
+struct MapGenEvent;
+
+fn generate_map(
+    mut commands: Commands,
+    mut map: ResMut<Map>,
+    mut gen_event: EventReader<MapGenEvent>,
+    terrains: Res<Terrains>,
+    texture: Res<TileTexture>,
+) {
+    if gen_event.iter().next().is_some() {
+        for (_, tile) in map.tiles.iter() {
+            commands.entity(*tile).despawn();
+        }
+        map.tiles.clear();
+        let terrain_map = Generator::new(&terrains, &GenerationConfig::new()).generate();
+        for (coord, terrain) in terrain_map.into_iter() {
+            let tile = commands
+                .spawn_bundle(TileBundle::new(coord, terrain, &terrains, &texture))
+                .id();
+            map.tiles.insert(coord, tile);
+        }
     }
 }
