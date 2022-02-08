@@ -8,6 +8,18 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 
+struct Noise {
+    noise: FastNoise,
+    scale: f32,
+}
+
+impl Noise {
+    fn noise(&self, coord: Coordinate) -> f32 {
+        self.noise
+            .get_noise(coord.x as f32 / self.scale, coord.y as f32 / self.scale)
+    }
+}
+
 /// [Terrain] and weight pair to distribute.
 struct Weight {
     terrain: usize,
@@ -32,10 +44,26 @@ impl Weight {
     }
 }
 
-struct Select {
-    noise: FastNoise,
-    scale: f32,
+struct Distribute {
     distribution: Vec<Weight>,
+}
+
+impl Distribute {
+    fn distribute(&self, value: f32) -> usize {
+        let mut remaining = value;
+        for Weight { terrain, weight } in self.distribution.iter() {
+            remaining -= weight;
+            if remaining <= 0.0 {
+                return *terrain;
+            }
+        }
+        unreachable!("`value` {} is too big! Remaining: {}", value, remaining);
+    }
+}
+
+struct Select {
+    noise: Noise,
+    distribute: Distribute,
 }
 
 impl Select {
@@ -55,31 +83,12 @@ impl Select {
             distribution
         };
         Select {
-            noise: config.noise.noise(),
-            scale: config.noise.scale,
-            distribution,
+            noise: Noise {
+                noise: config.noise.noise(),
+                scale: config.noise.scale,
+            },
+            distribute: Distribute { distribution },
         }
-    }
-
-    fn noise(&self, coord: Coordinate) -> f32 {
-        self.noise
-            .get_noise(coord.x as f32 / self.scale, coord.y as f32 / self.scale)
-    }
-
-    fn distribute(&self, value: f32) -> usize {
-        let mut remaining = value;
-        for Weight { terrain, weight } in self.distribution.iter() {
-            remaining -= weight;
-            if remaining <= 0.0 {
-                return *terrain;
-            }
-        }
-        remaining = value;
-        for Weight { terrain: _, weight } in self.distribution.iter() {
-            println!("Remaining: {}", remaining);
-            remaining -= weight;
-        }
-        unreachable!("`value` {} is too big! Remaining: {}", value, remaining);
     }
 }
 
@@ -109,9 +118,14 @@ impl Generate {
     }
 
     fn generate_tile(&self, coord: Coordinate) -> usize {
-        let from_height = self.height.distribute(self.height.noise(coord));
+        let from_height = self
+            .height
+            .distribute
+            .distribute(self.height.noise.noise(coord));
         if from_height == Weight::BY_HUMIDITY {
-            self.humidity.distribute(self.humidity.noise(coord))
+            self.humidity
+                .distribute
+                .distribute(self.humidity.noise.noise(coord))
         } else {
             from_height
         }
