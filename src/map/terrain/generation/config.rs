@@ -1,20 +1,21 @@
+use super::{Distribute, Island, Noise, Select, Weight};
+use crate::map::terrain::Terrains;
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use serde::{Deserialize, Serialize};
-use std::fs;
 
 /// Noise configuration.
 #[derive(Serialize, Deserialize)]
 pub(super) struct NoiseConfig {
-    simplex: bool,
-    octaves: i32,
-    gain: f32,
-    lacunarity: f32,
-    frequency: f32,
-    scale: f32,
+    pub(super) simplex: bool,
+    pub(super) octaves: i32,
+    pub(super) gain: f32,
+    pub(super) lacunarity: f32,
+    pub(super) frequency: f32,
+    pub(super) scale: f32,
 }
 
 impl NoiseConfig {
-    pub(super) fn noise(&self) -> (FastNoise, f32) {
+    pub(super) fn create(&self) -> Noise {
         let mut noise = FastNoise::seeded(rand::random());
         noise.set_noise_type(if self.simplex {
             NoiseType::SimplexFractal
@@ -26,35 +27,81 @@ impl NoiseConfig {
         noise.set_fractal_gain(self.gain);
         noise.set_fractal_lacunarity(self.lacunarity);
         noise.set_frequency(self.frequency);
-        (noise, self.scale)
+        Noise {
+            noise,
+            scale: self.scale,
+        }
     }
 }
 
-/// [Terrain] name and weight pair to distribute.
+/// [Terrain] name and non-normalized weight pair to distribute.
 #[derive(Serialize, Deserialize)]
-pub(super) struct TerrainWeightConfig {
+pub(super) struct WeightConfig {
     pub(super) name: String,
     pub(super) weight: f32,
 }
 
+impl WeightConfig {
+    pub(super) fn create(&self, terrains: &Terrains, total_weight: f32) -> Weight {
+        Weight::new(terrains, &self.name, self.weight / total_weight)
+    }
+}
+
+/// Non-normalized distribution of weights.
+#[derive(Serialize, Deserialize)]
+pub(super) struct DistributeConfig(pub(super) Vec<WeightConfig>);
+
+impl DistributeConfig {
+    pub(super) fn create(&self, terrains: &Terrains) -> Distribute {
+        let total_weight = self.total_weight();
+        Distribute {
+            distribution: self
+                .0
+                .iter()
+                .map(|config| config.create(terrains, total_weight))
+                .collect(),
+        }
+    }
+
+    fn total_weight(&self) -> f32 {
+        self.0.iter().map(|config| config.weight).sum()
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub(super) struct IslandConfig {
+    start: f32,
+    power: f32,
+}
+
+impl IslandConfig {
+    fn create(&self, radius: i32) -> Island {
+        Island {
+            radius: radius as f32,
+            start: self.start,
+            power: self.power,
+        }
+    }
+}
+
 /// Noise to [Terrain] distributor configuration.
 #[derive(Serialize, Deserialize)]
-pub(super) struct DistributorConfig {
+pub(super) struct SelectConfig {
     pub(super) noise: NoiseConfig,
-    pub(super) distribution: Vec<TerrainWeightConfig>,
+    pub(super) island: Option<IslandConfig>,
+    pub(super) distribute: DistributeConfig,
 }
 
-/// Configuration of [Terrain] generation.
-#[derive(Serialize, Deserialize)]
-pub(crate) struct GenerationConfig {
-    pub(super) radius: i32,
-    pub(super) height: DistributorConfig,
-    pub(super) humidity: DistributorConfig,
-}
-
-impl GenerationConfig {
-    pub(crate) fn new() -> Self {
-        serde_json::from_str(&fs::read_to_string("assets/terrain_generation.json").unwrap())
-            .unwrap()
+impl SelectConfig {
+    pub(super) fn create(&self, terrains: &Terrains, radius: i32) -> Select {
+        Select {
+            noise: self.noise.create(),
+            island: if let Some(island) = &self.island {
+                Some(island.create(radius))
+            } else {
+                None
+            },
+            distribute: self.distribute.create(terrains),
+        }
     }
 }

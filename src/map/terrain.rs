@@ -43,16 +43,32 @@ pub(crate) struct Terrains {
     named: HashMap<String, usize>,
 }
 
+impl Default for Terrains {
+    fn default() -> Self {
+        Self::from_file(Self::FILE)
+    }
+}
+
 impl Terrains {
+    /// Default file.
+    const FILE: &'static str = "assets/terrains.json";
+
     /// Reads from the assets.
     ///
     /// # Panics
     ///
-    /// * Cannot read the file "assets/terrains.json".
+    /// * Cannot read the file.
     /// * Cannot parse the JSON.
-    pub(super) fn new() -> Self {
-        let data: Vec<TerrainData> =
-            serde_json::from_str(&fs::read_to_string("assets/terrains.json").unwrap()).unwrap();
+    fn from_file(file: &str) -> Self {
+        Self::from_json(&fs::read_to_string(file).unwrap())
+    }
+
+    fn from_json(str: &str) -> Self {
+        let data: Vec<TerrainData> = serde_json::from_str(str).unwrap();
+        Self::from_data(data)
+    }
+
+    fn from_data(data: Vec<TerrainData>) -> Self {
         let mut indexed = Vec::new();
         let mut named = HashMap::new();
         for (id, TerrainData { name, color }) in data.into_iter().enumerate() {
@@ -98,7 +114,7 @@ mod test_map {
 
     #[test]
     fn test_terrain_loading() {
-        let terrains = Terrains::new();
+        let terrains = Terrains::default();
         assert_eq!(terrains.of_id(0).name, "Glaciers");
     }
 }

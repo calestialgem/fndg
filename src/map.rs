@@ -2,10 +2,7 @@
 
 mod terrain;
 
-use self::terrain::{
-    generation::{GenerationConfig, Generator},
-    Terrain, Terrains,
-};
+use self::terrain::{generation::Config, Terrain, Terrains};
 use bevy::{
     core_pipeline::ClearColor,
     math::Vec3,
@@ -25,7 +22,7 @@ struct Location {
 }
 
 impl Location {
-    const SIZE: f32 = 24.0;
+    const SIZE: f32 = 4.0;
     const SPACING: Spacing = Spacing::PointyTop(Self::SIZE / 2.0);
 
     fn to_vec3(coord: Coordinate) -> Vec3 {
@@ -93,7 +90,7 @@ pub(super) struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<MapGenEvent>();
-        app.insert_resource(Terrains::new());
+        app.insert_resource(Terrains::default());
         app.insert_resource(Map::default());
         app.insert_resource(ClearColor(Color::rgb(0.94, 0.97, 1.0)));
         app.add_startup_system(create_camera);
@@ -139,7 +136,7 @@ fn generate_map(
             commands.entity(*tile).despawn();
         }
         map.tiles.clear();
-        let terrain_map = Generator::new(&terrains, &GenerationConfig::new()).generate();
+        let terrain_map = Config::default().create(&terrains).generate();
         for (coord, terrain) in terrain_map.into_iter() {
             let tile = commands
                 .spawn_bundle(TileBundle::new(coord, terrain, &terrains, &texture))
