@@ -24,7 +24,8 @@ struct Location {
 }
 
 impl Location {
-    const SPACING: Spacing = Spacing::PointyTop(1.0);
+    const SIZE: f32 = 10.0;
+    const SPACING: Spacing = Spacing::PointyTop(Self::SIZE / 2.0);
 
     fn to_vec3(coord: Coordinate) -> Vec3 {
         let pixel = coord.to_pixel(Self::SPACING);
@@ -64,7 +65,7 @@ impl TileBundle {
                 },
                 transform: Transform {
                     translation: Location::to_vec3(coord),
-                    scale: Vec3::new(1.0, 1.0, 1.0),
+                    scale: Vec3::new(Location::SIZE, Location::SIZE, 1.0),
                     ..Default::default()
                 },
                 ..Default::default()
