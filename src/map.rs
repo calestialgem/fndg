@@ -1,41 +1,45 @@
 //! Stuff about the game map.
 
-use std::collections::HashMap;
-
-use bevy::prelude::{Color, Entity};
-use hex_grid::Coordinate;
+use bevy::prelude::{Commands, Component, Entity};
+use hex_grid::{Coordinate, Offset, CENTER};
+use perlin2d::PerlinNoise2D;
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, fs};
 
-/// Geographical features of a [Tile].
-#[derive(Serialize, Deserialize)]
-struct Terrain {
-    name: String,
-    color: Color,
-}
+use self::terrain::{Terrain, Terrains};
+
+mod terrain;
 
 /// Smallest piece of a [Map].
+#[derive(Component)]
 struct Tile {
-    id: Entity,
-    terrain: Terrain,
+    terrain: usize,
     coord: Coordinate,
 }
 
-/// The game world.
-struct Map {
-    tiles: HashMap<Coordinate, Tile>,
+impl Tile {
+    /// Creates a new tile.
+    fn new(terrain: usize, coord: Coordinate) -> Self {
+        Tile {
+            terrain: terrain,
+            coord: coord,
+        }
+    }
+
+    /// Returns this tile's terrain from the given terrains. This must be the
+    /// same terrains that was used in the generation of the tile.
+    fn terrain<'a>(&self, terrains: &'a Terrains) -> &'a Terrain {
+        terrains.of_id(self.terrain)
+    }
+
+    /// Coordinates of the hexagon.
+    fn coord(&self) -> Coordinate {
+        self.coord
+    }
 }
 
-#[cfg(test)]
-mod test_map {
-    use super::*;
-    use serde_json::Result;
-    use std::fs;
-
-    #[test]
-    fn test_terrain_loading() -> Result<()> {
-        let terrains_json = fs::read_to_string("assets/terrains.json");
-        let terrains: Vec<Terrain> = serde_json::from_str(terrains_json.unwrap().as_str())?;
-        assert_eq!(terrains[0].name, "Glaciers");
-        Ok(())
-    }
+/// The game world.
+#[derive(Default)]
+struct Map {
+    tiles: HashMap<Coordinate, Entity>,
 }
