@@ -9,7 +9,7 @@
 			"frequency": 1.0,
 			"scale": 1.0
 		},
-		"distribution": [
+		"distribute": [
 			{ "name": "Glaciers", "weight": 1.0 },
 			{ "name": "Oceans", "weight": 1.0 },
 			{ "name": "Seas", "weight": 2.0 },
@@ -28,7 +28,7 @@
 			"frequency": 1.0,
 			"scale": 1.0
 		},
-		"distribution": [
+		"distribute": [
 			{ "name": "Deserts", "weight": 1.0 },
 			{ "name": "Grasslands", "weight": 3.0 },
 			{ "name": "Forests", "weight": 1.0 },

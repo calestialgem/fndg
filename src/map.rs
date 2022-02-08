@@ -2,10 +2,7 @@
 
 mod terrain;
 
-use self::terrain::{
-    generation::{Config, Generate},
-    Terrain, Terrains,
-};
+use self::terrain::{generation::Config, Terrain, Terrains};
 use bevy::{
     core_pipeline::ClearColor,
     math::Vec3,
@@ -139,7 +136,7 @@ fn generate_map(
             commands.entity(*tile).despawn();
         }
         map.tiles.clear();
-        let terrain_map = Generate::new(&terrains, &Config::default()).generate();
+        let terrain_map = Config::default().create(&terrains).generate();
         for (coord, terrain) in terrain_map.into_iter() {
             let tile = commands
                 .spawn_bundle(TileBundle::new(coord, terrain, &terrains, &texture))

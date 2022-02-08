@@ -1,4 +1,4 @@
-use super::Weight;
+use super::{Distribute, Noise, Select, Weight};
 use crate::map::terrain::Terrains;
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ pub(super) struct NoiseConfig {
 }
 
 impl NoiseConfig {
-    pub(super) fn noise(&self) -> FastNoise {
+    pub(super) fn create(&self) -> Noise {
         let mut noise = FastNoise::seeded(rand::random());
         noise.set_noise_type(if self.simplex {
             NoiseType::SimplexFractal
@@ -27,7 +27,10 @@ impl NoiseConfig {
         noise.set_fractal_gain(self.gain);
         noise.set_fractal_lacunarity(self.lacunarity);
         noise.set_frequency(self.frequency);
-        noise
+        Noise {
+            noise,
+            scale: self.scale,
+        }
     }
 }
 
@@ -48,9 +51,35 @@ impl WeightConfig {
 #[derive(Serialize, Deserialize)]
 pub(super) struct DistributeConfig(pub(super) Vec<WeightConfig>);
 
+impl DistributeConfig {
+    pub(super) fn create(&self, terrains: &Terrains) -> Distribute {
+        let total_weight = self.total_weight();
+        Distribute {
+            distribution: self
+                .0
+                .iter()
+                .map(|config| config.create(terrains, total_weight))
+                .collect(),
+        }
+    }
+
+    fn total_weight(&self) -> f32 {
+        self.0.iter().map(|config| config.weight).sum()
+    }
+}
+
 /// Noise to [Terrain] distributor configuration.
 #[derive(Serialize, Deserialize)]
 pub(super) struct SelectConfig {
     pub(super) noise: NoiseConfig,
-    pub(super) distribution: DistributeConfig,
+    pub(super) distribute: DistributeConfig,
+}
+
+impl SelectConfig {
+    pub(super) fn create(&self, terrains: &Terrains) -> Select {
+        Select {
+            noise: self.noise.create(),
+            distribute: self.distribute.create(terrains),
+        }
+    }
 }

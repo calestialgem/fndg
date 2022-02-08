@@ -1,6 +1,6 @@
 mod config;
 
-use self::config::{SelectConfig, WeightConfig};
+use self::config::SelectConfig;
 use super::Terrains;
 use bracket_noise::prelude::FastNoise;
 use hex2d::Coordinate;
@@ -67,28 +67,8 @@ struct Select {
 }
 
 impl Select {
-    fn new(terrains: &Terrains, config: &SelectConfig) -> Self {
-        let total_weight = {
-            let mut total_weight = 0.0;
-            for WeightConfig { name: _, weight } in config.distribution.0.iter() {
-                total_weight += weight;
-            }
-            total_weight
-        };
-        let distribution = {
-            let mut distribution = Vec::new();
-            for weight in config.distribution.0.iter() {
-                distribution.push(weight.create(terrains, total_weight));
-            }
-            distribution
-        };
-        Select {
-            noise: Noise {
-                noise: config.noise.noise(),
-                scale: config.noise.scale,
-            },
-            distribute: Distribute { distribution },
-        }
+    fn select(&self, coord: Coordinate) -> usize {
+        self.distribute.distribute(self.noise.noise(coord))
     }
 }
 
@@ -100,14 +80,6 @@ pub(crate) struct Generate {
 }
 
 impl Generate {
-    pub(crate) fn new(terrains: &Terrains, config: &Config) -> Self {
-        Generate {
-            radius: config.radius,
-            height: Select::new(terrains, &config.height),
-            humidity: Select::new(terrains, &config.humidity),
-        }
-    }
-
     pub(crate) fn generate(&self) -> HashMap<Coordinate, usize> {
         let coords = Coordinate::new(0, 0).range_iter(self.radius);
         let mut map = HashMap::new();
@@ -118,14 +90,9 @@ impl Generate {
     }
 
     fn generate_tile(&self, coord: Coordinate) -> usize {
-        let from_height = self
-            .height
-            .distribute
-            .distribute(self.height.noise.noise(coord));
+        let from_height = self.height.select(coord);
         if from_height == Weight::BY_HUMIDITY {
-            self.humidity
-                .distribute
-                .distribute(self.humidity.noise.noise(coord))
+            self.humidity.select(coord)
         } else {
             from_height
         }
@@ -149,6 +116,14 @@ impl Config {
 
     fn from_json(json: &str) -> Self {
         serde_json::from_str(json).unwrap()
+    }
+
+    pub(crate) fn create(&self, terrains: &Terrains) -> Generate {
+        Generate {
+            radius: self.radius,
+            height: self.height.create(terrains),
+            humidity: self.humidity.create(terrains),
+        }
     }
 }
 
