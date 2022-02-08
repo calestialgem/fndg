@@ -7,10 +7,11 @@ use self::terrain::{
     Terrain, Terrains,
 };
 use bevy::{
+    core_pipeline::ClearColor,
     math::Vec3,
     prelude::{
-        App, AssetServer, Bundle, Commands, Component, Entity, EventReader, EventWriter, Handle,
-        Image, OrthographicCameraBundle, Plugin, Res, ResMut, Transform,
+        App, AssetServer, Bundle, Color, Commands, Component, Entity, EventReader, EventWriter,
+        Handle, Image, OrthographicCameraBundle, Plugin, Res, ResMut, Transform,
     },
     sprite::SpriteBundle,
 };
@@ -94,6 +95,7 @@ impl Plugin for MapPlugin {
         app.add_event::<MapGenEvent>();
         app.insert_resource(Terrains::new());
         app.insert_resource(Map::default());
+        app.insert_resource(ClearColor(Color::rgb(0.94, 0.97, 1.0)));
         app.add_startup_system(create_camera);
         app.add_startup_system(load_tile_texture);
         app.add_startup_system(generate_initial_map);
@@ -123,7 +125,7 @@ fn generate_initial_map(mut gen_event: EventWriter<MapGenEvent>) {
     gen_event.send(MapGenEvent);
 }
 
-struct MapGenEvent;
+pub(crate) struct MapGenEvent;
 
 fn generate_map(
     mut commands: Commands,
