@@ -1,9 +1,7 @@
+use super::Weight;
+use crate::map::terrain::Terrains;
 use bracket_noise::prelude::{FastNoise, FractalType, NoiseType};
 use serde::{Deserialize, Serialize};
-
-use crate::map::terrain::Terrains;
-
-use super::TerrainWeight;
 
 /// Noise configuration.
 #[derive(Serialize, Deserialize)]
@@ -33,25 +31,26 @@ impl NoiseConfig {
     }
 }
 
-/// [Terrain] name and weight pair to distribute.
+/// [Terrain] name and non-normalized weight pair to distribute.
 #[derive(Serialize, Deserialize)]
-pub(super) struct TerrainWeightConfig {
+pub(super) struct WeightConfig {
     pub(super) name: String,
     pub(super) weight: f32,
 }
 
-impl TerrainWeightConfig {
-    pub(super) fn create(&self, terrains: &Terrains, total_weight: f32) -> TerrainWeight {
-        TerrainWeight::new(terrains, &self.name, self.weight / total_weight)
+impl WeightConfig {
+    pub(super) fn create(&self, terrains: &Terrains, total_weight: f32) -> Weight {
+        Weight::new(terrains, &self.name, self.weight / total_weight)
     }
 }
 
+/// Non-normalized distribution of weights.
 #[derive(Serialize, Deserialize)]
-pub(super) struct Distribution(pub(super) Vec<TerrainWeightConfig>);
+pub(super) struct DistributeConfig(pub(super) Vec<WeightConfig>);
 
 /// Noise to [Terrain] distributor configuration.
 #[derive(Serialize, Deserialize)]
-pub(super) struct DistributorConfig {
+pub(super) struct SelectConfig {
     pub(super) noise: NoiseConfig,
-    pub(super) distribution: Distribution,
+    pub(super) distribution: DistributeConfig,
 }

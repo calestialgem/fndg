@@ -1,6 +1,6 @@
 mod config;
 
-use self::config::{DistributorConfig, TerrainWeightConfig};
+use self::config::{SelectConfig, WeightConfig};
 use super::Terrains;
 use bracket_noise::prelude::FastNoise;
 use hex2d::Coordinate;
@@ -9,22 +9,22 @@ use std::collections::HashMap;
 use std::fs;
 
 /// [Terrain] and weight pair to distribute.
-struct TerrainWeight {
+struct Weight {
     terrain: usize,
     weight: f32,
 }
 
-impl TerrainWeight {
+impl Weight {
     const BY_HUMIDITY: usize = usize::MAX;
 
     fn new(terrains: &Terrains, name: &String, weight: f32) -> Self {
         if name == "BY_HUMIDITY" {
-            TerrainWeight {
+            Weight {
                 terrain: Self::BY_HUMIDITY,
                 weight,
             }
         } else {
-            TerrainWeight {
+            Weight {
                 terrain: terrains.of_name(name).id(),
                 weight,
             }
@@ -32,17 +32,17 @@ impl TerrainWeight {
     }
 }
 
-struct Distributor {
+struct Select {
     noise: FastNoise,
     scale: f32,
-    distribution: Vec<TerrainWeight>,
+    distribution: Vec<Weight>,
 }
 
-impl Distributor {
-    fn new(terrains: &Terrains, config: &DistributorConfig) -> Self {
+impl Select {
+    fn new(terrains: &Terrains, config: &SelectConfig) -> Self {
         let total_weight = {
             let mut total_weight = 0.0;
-            for TerrainWeightConfig { name: _, weight } in config.distribution.0.iter() {
+            for WeightConfig { name: _, weight } in config.distribution.0.iter() {
                 total_weight += weight;
             }
             total_weight
@@ -54,7 +54,7 @@ impl Distributor {
             }
             distribution
         };
-        Distributor {
+        Select {
             noise: config.noise.noise(),
             scale: config.noise.scale,
             distribution,
@@ -68,14 +68,14 @@ impl Distributor {
 
     fn distribute(&self, value: f32) -> usize {
         let mut remaining = value;
-        for TerrainWeight { terrain, weight } in self.distribution.iter() {
+        for Weight { terrain, weight } in self.distribution.iter() {
             remaining -= weight;
             if remaining <= 0.0 {
                 return *terrain;
             }
         }
         remaining = value;
-        for TerrainWeight { terrain: _, weight } in self.distribution.iter() {
+        for Weight { terrain: _, weight } in self.distribution.iter() {
             println!("Remaining: {}", remaining);
             remaining -= weight;
         }
@@ -84,18 +84,18 @@ impl Distributor {
 }
 
 /// Generates; a [Map] from Perlin noise.
-pub(crate) struct Generator {
+pub(crate) struct Generate {
     radius: i32,
-    height: Distributor,
-    humidity: Distributor,
+    height: Select,
+    humidity: Select,
 }
 
-impl Generator {
+impl Generate {
     pub(crate) fn new(terrains: &Terrains, config: &Config) -> Self {
-        Generator {
+        Generate {
             radius: config.radius,
-            height: Distributor::new(terrains, &config.height),
-            humidity: Distributor::new(terrains, &config.humidity),
+            height: Select::new(terrains, &config.height),
+            humidity: Select::new(terrains, &config.humidity),
         }
     }
 
@@ -110,7 +110,7 @@ impl Generator {
 
     fn generate_tile(&self, coord: Coordinate) -> usize {
         let from_height = self.height.distribute(self.height.noise(coord));
-        if from_height == TerrainWeight::BY_HUMIDITY {
+        if from_height == Weight::BY_HUMIDITY {
             self.humidity.distribute(self.humidity.noise(coord))
         } else {
             from_height
@@ -122,8 +122,8 @@ impl Generator {
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Config {
     radius: i32,
-    height: DistributorConfig,
-    humidity: DistributorConfig,
+    height: SelectConfig,
+    humidity: SelectConfig,
 }
 
 impl Config {
