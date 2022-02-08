@@ -1,62 +1,12 @@
+mod config;
+
+pub(crate) use self::config::GenerationConfig;
+
+use self::config::{DistributorConfig, TerrainWeightConfig};
+use super::Terrains;
 use hex_grid::{Coordinate, Offset, CENTER};
 use perlin2d::PerlinNoise2D;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs};
-
-use super::Terrains;
-
-/// Perlin noise configuration.
-#[derive(Serialize, Deserialize)]
-struct Noise {
-    octaves: i32,
-    frequency: f64,
-    persistence: f64,
-    lacunarity: f64,
-    scale: f64,
-}
-
-impl Noise {
-    fn perlin(&self, amplitude: f64) -> PerlinNoise2D {
-        PerlinNoise2D::new(
-            self.octaves,
-            amplitude,
-            self.frequency,
-            self.persistence,
-            self.lacunarity,
-            (self.scale, self.scale),
-            0.0,
-            rand::random(),
-        )
-    }
-}
-
-/// [Terrain] name and weight pair to distribute.
-#[derive(Serialize, Deserialize)]
-struct TerrainWeightConfig {
-    name: String,
-    weight: f64,
-}
-
-/// Perlin noise to [Terrain] distributor configuration.
-#[derive(Serialize, Deserialize)]
-struct DistributorConfig {
-    noise: Noise,
-    distribution: Vec<TerrainWeightConfig>,
-}
-
-/// Configuration of [Terrain] generation.
-#[derive(Serialize, Deserialize)]
-struct GenerationConfig {
-    radius: u16,
-    height: DistributorConfig,
-    humidity: DistributorConfig,
-}
-
-impl GenerationConfig {
-    fn new() -> Self {
-        serde_json::from_str(&fs::read_to_string("assets/map_generation.json").unwrap()).unwrap()
-    }
-}
+use std::collections::HashMap;
 
 /// [Terrain] and weight pair to distribute.
 struct TerrainWeight {
@@ -117,14 +67,14 @@ impl Distributor {
 }
 
 /// Generates; a [Map] from Perlin noise.
-struct Generator {
+pub(crate) struct Generator {
     radius: u16,
     height: Distributor,
     humidity: Distributor,
 }
 
 impl Generator {
-    fn new(terrains: &Terrains, config: &GenerationConfig) -> Self {
+    pub(crate) fn new(terrains: &Terrains, config: &GenerationConfig) -> Self {
         Generator {
             radius: config.radius,
             height: Distributor::new(terrains, &config.height),
@@ -132,16 +82,16 @@ impl Generator {
         }
     }
 
-    fn generate(&self, terrains: &Terrains) -> HashMap<Coordinate, usize> {
+    pub(crate) fn generate(&self) -> HashMap<Coordinate, usize> {
         let coords = CENTER + Offset::fill_hex(self.radius);
         let mut map = HashMap::new();
         for coord in coords {
-            map.insert(coord, self.generate_tile(terrains, coord));
+            map.insert(coord, self.generate_tile(coord));
         }
         map
     }
 
-    fn generate_tile(&self, terrains: &Terrains, coord: Coordinate) -> usize {
+    fn generate_tile(&self, coord: Coordinate) -> usize {
         let from_height = self.height.distribute(self.height.noise(coord));
         if from_height == TerrainWeight::BY_HUMIDITY {
             self.humidity.distribute(self.humidity.noise(coord))

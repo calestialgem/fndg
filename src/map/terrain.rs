@@ -1,4 +1,4 @@
-mod generation;
+pub(crate) mod generation;
 
 use bevy::prelude::Color;
 use serde::{Deserialize, Serialize};
@@ -6,7 +6,7 @@ use std::{collections::HashMap, fs};
 
 /// Geographical features of a [Tile].
 #[derive(Debug)]
-pub struct Terrain {
+pub(crate) struct Terrain {
     id: usize,
     name: String,
     color: Color,
@@ -38,7 +38,7 @@ impl PartialEq for Terrain {
 impl Eq for Terrain {}
 
 /// All the terrains.
-pub struct Terrains {
+pub(crate) struct Terrains {
     indexed: Vec<Terrain>,
     named: HashMap<String, usize>,
 }
