@@ -132,3 +132,90 @@ impl Default for Config {
         Self::from_file(Self::FILE)
     }
 }
+
+#[cfg(test)]
+mod test_generation {
+    use super::config::{DistributeConfig, WeightConfig};
+    use crate::map::terrain::Terrains;
+
+    #[test]
+    fn test_distribute() {
+        let terrains = Terrains::default();
+        let distribute = DistributeConfig(vec![
+            WeightConfig {
+                name: String::from("Glaciers"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Oceans"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Seas"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Shores"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Beaches"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Deserts"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Grasslands"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Forests"),
+                weight: 1.0,
+            },
+            WeightConfig {
+                name: String::from("Mountains"),
+                weight: 1.0,
+            },
+        ])
+        .create(&terrains);
+
+        assert_eq!(
+            terrains.of_name(&String::from("Glaciers")),
+            terrains.of_id(distribute.distribute(0.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Oceans")),
+            terrains.of_id(distribute.distribute(1.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Seas")),
+            terrains.of_id(distribute.distribute(2.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Shores")),
+            terrains.of_id(distribute.distribute(3.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Beaches")),
+            terrains.of_id(distribute.distribute(4.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Deserts")),
+            terrains.of_id(distribute.distribute(5.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Grasslands")),
+            terrains.of_id(distribute.distribute(6.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Forests")),
+            terrains.of_id(distribute.distribute(7.5 / 9.0))
+        );
+        assert_eq!(
+            terrains.of_name(&String::from("Mountains")),
+            terrains.of_id(distribute.distribute(8.5 / 9.0))
+        );
+    }
+}
