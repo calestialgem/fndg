@@ -1,5 +1,5 @@
 {
-	"radius": 100,
+	"radius": 1000,
 	"height": {
 		"noise": {
 			"simplex": true,
