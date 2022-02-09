@@ -1,5 +1,6 @@
 //! Stuff about the game map.
 
+mod render;
 mod terrain;
 
 use self::terrain::{generation::Config, Terrain, Terrains};
@@ -8,8 +9,9 @@ use bevy::{
     math::Vec3,
     prelude::{
         App, AssetServer, Bundle, Color, Commands, Component, Entity, EventReader, EventWriter,
-        Handle, Image, Plugin, Res, ResMut, Transform,
+        Handle, Image, Mesh, Plugin, Res, ResMut, Transform,
     },
+    render::render_resource::PrimitiveTopology,
     sprite::SpriteBundle,
 };
 use hex2d::{Coordinate, Spacing};
@@ -132,6 +134,7 @@ fn generate_map(
         }
         map.tiles.clear();
         let terrain_map = Config::default().create(&terrains).generate();
+        let mut mesh = Mesh::new(PrimitiveTopology::LineList);
         for (coord, terrain) in terrain_map.into_iter() {
             let tile = commands
                 .spawn_bundle(TileBundle::new(coord, terrain, &terrains, &texture))
