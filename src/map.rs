@@ -8,7 +8,7 @@ use bevy::{
     math::Vec3,
     prelude::{
         App, AssetServer, Bundle, Color, Commands, Component, Entity, EventReader, EventWriter,
-        Handle, Image, OrthographicCameraBundle, Plugin, Res, ResMut, Transform,
+        Handle, Image, Plugin, Res, ResMut, Transform,
     },
     sprite::SpriteBundle,
 };
@@ -22,7 +22,7 @@ struct Location {
 }
 
 impl Location {
-    const SIZE: f32 = 4.0;
+    const SIZE: f32 = 1.0;
     const SPACING: Spacing = Spacing::PointyTop(Self::SIZE / 2.0);
 
     fn to_vec3(coord: Coordinate) -> Vec3 {
@@ -93,7 +93,6 @@ impl Plugin for MapPlugin {
         app.insert_resource(Terrains::default());
         app.insert_resource(Map::default());
         app.insert_resource(ClearColor(Color::rgb(0.94, 0.97, 1.0)));
-        app.add_startup_system(create_camera);
         app.add_startup_system(load_tile_texture);
         app.add_startup_system(generate_initial_map);
         app.add_system(generate_map);
@@ -102,10 +101,6 @@ impl Plugin for MapPlugin {
     fn name(&self) -> &str {
         "Fndg::Map"
     }
-}
-
-fn create_camera(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 }
 
 struct TileTexture(Handle<Image>);

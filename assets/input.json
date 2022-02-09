@@ -1,3 +1,5 @@
 {
-	"regen_map": "Y"
+	"regen_map": "Y",
+	"zoom_in": "M",
+	"zoom_out": "N"
 }
