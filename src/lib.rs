@@ -2,8 +2,10 @@ mod input;
 mod map;
 
 use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     log::{Level, LogSettings},
-    prelude::*,
+    prelude::{App, Component, Plugin, PluginGroup},
+    window::{WindowDescriptor, WindowMode},
 };
 use input::InputPlugin;
 use map::MapPlugin;
@@ -13,9 +15,31 @@ pub struct Fndg;
 
 impl PluginGroup for Fndg {
     fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group.add(DebugPlugin);
+        group.add(LogDiagnosticsPlugin::default());
+        group.add(FrameTimeDiagnosticsPlugin::default());
+        group.add(MainPlugin);
         group.add(MapPlugin);
         group.add(InputPlugin);
+    }
+}
+
+struct MainPlugin;
+
+impl Plugin for MainPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(WindowDescriptor {
+            width: 1280.0,
+            height: 720.0,
+            title: String::from("Founding"),
+            vsync: true,
+            resizable: false,
+            mode: WindowMode::Windowed,
+            ..Default::default()
+        });
+    }
+
+    fn name(&self) -> &str {
+        "Fndg::Main"
     }
 }
 
