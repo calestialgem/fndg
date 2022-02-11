@@ -1,6 +1,6 @@
 [package]
 name = "fndg"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Cem Geçgel <gecgelcem@outlook.com>"]
 edition = "2021"
 description = "An unchained map game where you battle for resources while building your nation up."
