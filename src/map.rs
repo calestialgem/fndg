@@ -3,16 +3,18 @@
 mod render;
 mod terrain;
 
-use self::terrain::{generation::Config, Terrain, Terrains};
+use self::{
+    render::Lines,
+    terrain::{generation::Config, Terrain, Terrains},
+};
 use bevy::{
     core_pipeline::ClearColor,
     math::Vec3,
     prelude::{
-        App, AssetServer, Bundle, Color, Commands, Component, Entity, EventReader, EventWriter,
-        Handle, Image, Mesh, Plugin, Res, ResMut, Transform,
+        App, AssetServer, Assets, Bundle, Color, Commands, Component, Entity, EventReader,
+        EventWriter, Handle, Image, Mesh, Plugin, Res, ResMut, Transform,
     },
-    render::render_resource::PrimitiveTopology,
-    sprite::SpriteBundle,
+    sprite::{ColorMaterial, ColorMesh2dBundle, Mesh2dHandle, SpriteBundle},
 };
 use hex2d::{Coordinate, Spacing};
 use std::collections::HashMap;
@@ -85,6 +87,7 @@ impl TileBundle {
 #[derive(Default)]
 struct Map {
     tiles: HashMap<Coordinate, Entity>,
+    frame: Option<Entity>,
 }
 
 pub(super) struct MapPlugin;
@@ -127,14 +130,42 @@ fn generate_map(
     mut gen_event: EventReader<MapGenEvent>,
     terrains: Res<Terrains>,
     texture: Res<TileTexture>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut colors: ResMut<Assets<ColorMaterial>>,
 ) {
     if gen_event.iter().next().is_some() {
         for (_, tile) in map.tiles.iter() {
             commands.entity(*tile).despawn();
         }
         map.tiles.clear();
+        if let Some(entity) = map.frame.take() {
+            commands.entity(entity).despawn();
+        }
         let terrain_map = Config::default().create(&terrains).generate();
-        let mut mesh = Mesh::new(PrimitiveTopology::LineList);
+        let mesh = {
+            let mut lines = Lines::new(Location::SPACING);
+            for coord in terrain_map.keys() {
+                lines.add(*coord);
+            }
+            lines.into_mesh()
+        };
+        map.frame = Some(
+            commands
+                .spawn()
+                .insert_bundle(ColorMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(mesh)),
+                    material: colors.add(ColorMaterial {
+                        color: Color::rgb(0.0, 0.0, 0.0),
+                        ..Default::default()
+                    }),
+                    transform: Transform {
+                        translation: Vec3::new(0.0, 0.0, 1.0),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .id(),
+        );
         for (coord, terrain) in terrain_map.into_iter() {
             let tile = commands
                 .spawn_bundle(TileBundle::new(coord, terrain, &terrains, &texture))
