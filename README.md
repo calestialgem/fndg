@@ -20,7 +20,23 @@ These will be _technology_, _diplomacy_, and _multiplayer_.
 
 ## Game Engine
 
-Using **Bevy** as the powering technology.
+> Using **Bevy** as the powering technology.
+
+Not anymore; since 0.5.0. **Bevy** is a _great_ game engine, I loved its design,
+but I do not have time to learn how to render using it, unfortunetely. The frame
+rate was very bad because of that. Furthermore, I could not even render the
+lines in the map properly.
+
+Rather than spending more time on learning a third new thing (**Bevy** uses
+**WebGL** I suppose), I decided to render in **OpenGL**, and the only new thing
+would be **Rust**. While I just started again, writing min_gl and min_timer
+helped a lot.
+
+Writing code to work with **Bevy** was a different experience that writing my
+own game framework. The reason is, I get to make most of the design desicions
+and this pushed me to read and learn about **Rust**, rather than just making it
+compile and work properly. (I could not get there anyways even with something as
+basic as rendering a line mesh.)
 
 ## License
 
@@ -39,12 +55,15 @@ dual licensed as above, without any additional terms or conditions.
 
 ## Author
 
-Keep in mind that I'm very new to **Rust** (and **Bevy**, as you can imagine)! I
-programmed in **Java** for 7-8 years, then tried some **C/C++**, and ended up in
-**Rust**.
+Keep in mind that I'm very new to **Rust** (and **Bevy**, as you can imagine; I
+don't use it anymore tho)! I programmed in **Java** for 7-8 years, then tried
+some **C/C++**, and ended up in **Rust**.
 
-I create games and programs for _hobby_, I cannot go at it full-time. I will try
-to get atleast a prototype running in _2 weeks_. After that the development
-_might stall_ because of the university.
+> I create games and programs for _hobby_, I cannot go at it full-time. I will
+> try to get atleast a prototype running in _2 weeks_. After that the
+> development _might stall_ because of the university.
+
+That aged well! The "2 weeks" are over, and I'm starting clean! Altough, I could
+not get something playable in the end, I enjoyed trying and learning.
 
 Copyright 2022 Cem Geçgel <gecgelcem@outlook.com>
