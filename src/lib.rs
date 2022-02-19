@@ -1,65 +1,54 @@
-mod input;
-mod map;
+/// Renders the game.
+pub mod render;
 
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    log::{Level, LogSettings},
-    prelude::{App, Component, Plugin, PluginGroup},
-    window::{WindowDescriptor, WindowMode},
-};
-use input::InputPlugin;
-use map::MapPlugin;
+use min_timer::{Now, Stt};
+use std::ops::*;
 
-/// Main Bevy plugin of the game, Founding.
+/// State of the game.
 pub struct Fndg;
 
-impl PluginGroup for Fndg {
-    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group.add(LogDiagnosticsPlugin::default());
-        group.add(FrameTimeDiagnosticsPlugin::default());
-        group.add(MainPlugin);
-        group.add(MapPlugin);
-        group.add(InputPlugin);
+impl Mul<f64> for Fndg {
+    type Output = Fndg;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self
     }
 }
 
-struct MainPlugin;
+impl Add for Fndg {
+    type Output = Fndg;
 
-impl Plugin for MainPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(WindowDescriptor {
-            width: 1280.0,
-            height: 720.0,
-            title: String::from("Founding"),
-            vsync: true,
-            resizable: false,
-            mode: WindowMode::Windowed,
-            ..Default::default()
-        });
-    }
-
-    fn name(&self) -> &str {
-        "Fndg::Main"
+    fn add(self, rhs: Self) -> Self::Output {
+        Self
     }
 }
 
-struct DebugPlugin;
-
-impl Plugin for DebugPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(LogSettings {
-            filter: String::from("wgpu=warn,bevy_ecs=info"),
-            level: Level::DEBUG,
-        });
-    }
-
-    fn name(&self) -> &str {
-        "Fndg::Debug"
+impl Clone for Fndg {
+    fn clone(&self) -> Self {
+        Self
     }
 }
 
-/// A player or an AI.
-#[derive(Component)]
-struct Nation {
-    name: String,
+impl Copy for Fndg {}
+
+impl Default for Fndg {
+    fn default() -> Self {
+        Self
+    }
+}
+
+impl<T: Now> Stt<T> for Fndg {
+    fn init(&mut self, _: &mut min_timer::Hrt<T>, timer: min_timer::Timer<T>) {
+        println!("Initialization is complete! Took {}", timer);
+    }
+
+    fn update(&mut self, hrt: &mut min_timer::Hrt<T>) {}
+
+    fn sec(&mut self, hrt: &mut min_timer::Hrt<T>) {
+        println!(
+            "Tick Rate: {} Frame Rate: {}",
+            hrt.ticks().avg_rate(),
+            hrt.frames().avg_rate()
+        );
+    }
 }
